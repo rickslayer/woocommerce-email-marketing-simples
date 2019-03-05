@@ -31,6 +31,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Plugin Constants
+ */
+if(!defined('WEMS_URL')) {
+    define('WEMS_URL', plugin_dir_url(__FILE__));
+}
+if(!defined('WEMS_PATH')) {
+	define('WEMS_PATH', plugin_dir_path( __FILE__ ));
+}
+
+require_once('woocommerce-email-marketing-simples-data.php');
 
 class woocomerce_email_marketing_simples
 {
@@ -39,8 +50,14 @@ class woocomerce_email_marketing_simples
         $this->wems_checkWoocommerceActive();
 
         add_action( 'admin_menu', array( $this, 'wems_resgister_submenu_page' ) );
-       // add_action( 'wp_ajax_store_admin_data', array( $this, 'storeAdminData' ) );
-       // add_action( 'admin_enqueue_scripts', array( $this, 'addAdminScripts' ) );
+        add_action( 'admin_menu', array( $this, 'wems_register_submenu_page_enviar'));
+        add_action('admin_init', array($this, 'wems_settings_fields'));
+        add_action('admin_enqueue_scripts', array($this, 'wemsAddScripts'));
+        add_action( 'wp_ajax_buscaClientes', array( $this, 'buscaClientes' ) );
+        add_action( 'wp_ajax_admin_buscaClientes', array( $this, 'buscaClientes' ) );
+      
+        
+        
     }
 
     private function wems_checkWoocommerceActive()
@@ -59,7 +76,12 @@ class woocomerce_email_marketing_simples
     }
 
     public function wems_resgister_submenu_page() {
-        add_submenu_page( 'woocommerce', 'Email Marketing Simples', 'Email Marketing Simples', 'manage_options', 'woocommerce-email-marketing-simples', array($this, 'wems_register_submenu_page_callback' )); 
+        add_menu_page("Email Marketing Simples", "WC Email Marketing Simples","manage_options","woocommerce-email-marketing-simples",array($this, "wems_register_submenu_page_callback"));
+        
+    }
+
+    public function wems_register_submenu_page_enviar(){
+        add_submenu_page('woocommerce-email-marketing-simples', 'Enviar e-mails', 'Enviar e-mails', 'manage_options','wems-enviar-email', array($this, 'wems_register_submenu_page_callback_enviar'));
     }
 
     private $option_name = 'wems_data';
@@ -71,30 +93,94 @@ class woocomerce_email_marketing_simples
 
     public function wems_register_submenu_page_callback() 
     {
-
-        $data = $this->wems_getData();
-
         ?>
-        <div class="wrap">
-        <h2>WooCommerce Email Marketing Simples</h2>
-        <form action="post">
-            <table class="form-table">
-                <tbody>
-                    <tr>
-                        <td scope="row">
-                            <label> <?php _e('Assunto', 'woocomerce_email_marketing_simples')?></label>
-                        </td>
-                        <td>
-                            <input type="text" name="wems_assunto" id="wems_assunto" class="regular-text"  value="<?php echo (isset($data['wems_assunto'])) ? $data['wems_assunto'] : ''; ?>"/>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <form action='options.php' method='post'>
+
+            <?php
+            settings_fields( 'wemsPagina' );
+            do_settings_sections( 'wemsPagina' );
+            submit_button();
+            ?>
+
         </form>
-        </div>
+        <?php
+
+     }
+
+     public function wems_register_submenu_page_callback_enviar()
+     {
+        ?>
+            <h2>Enviar emails</h2>
+            <h4>Primeiro Passo Clique no botão abaixo para verificar a quantidade de e-mails<h4/>
+            <button id="buscarEmails" class="button button-primary">Buscar e-mails</button>
+
+         <?php
+     }
+
+    public function wems_settings_fields()
+    {
+        register_setting('wemsPagina', 'wems_data');
+
+        add_settings_section('wems_settings_section',__('WooCommerce Email Marketing Simples','woocomerce_email_marketing_simples'), '','wemsPagina');
+
+        add_settings_field('wems_ativar', __('Ativar Email Marketing','woocommerce_email_marketing_simples'), array($this,'wems_field_render_ativar'),'wemsPagina', 'wems_settings_section');
+
+        add_settings_field('wems_assunto', __('Assunto do e-mail','woocommerce_email_marketing_simples'), array($this,'wems_field_render_assunto'),'wemsPagina', 'wems_settings_section');
+
+        add_settings_field('wems_corpo', __('Corpo do e-mail', 'woocommerce_email_marketing_simples'), array($this, 'wems_field_render_corpo'), 'wemsPagina', 'wems_settings_section');
+        
+    }
+ 
+
+    public function wems_field_render_ativar()
+    {
+        $options = $this->wems_getData();
+        ?>
+        <select name='wems_data[wems_ativar]' id="wems_ativar" >
+            <option value='1' <?php selected( (isset($options['wems_ativar']) ? $options['wems_ativar'] : ''), 1 ); ?>>Sim</option>
+            <option value='0' <?php selected( (isset($options['wems_ativar']) ? $options['wems_ativar'] : ''), 0 ); ?>>Não</option>
+        </select>
+
+    <?php
+    }
+       
+    public function wems_field_render_assunto()
+    {
+        $options = $this->wems_getData();
+        ?>
+        <input type='text' name=wems_data[wems_assunto]' value='<?php echo (isset($options['wems_assunto']) ? $options['wems_assunto'] : ''); ?>' style="width: 400px;">
         <?php
     }
-   
+
+    public function wems_field_render_corpo()
+    {
+        $options = $this->wems_getData();
+        $content = (isset($options['wems_corpo']) ? $options['wems_corpo'] : '');
+        $content_id = 'wems_corpo';
+        $args = array('textarea_name' => 'wems_data[wems_corpo]');
+        wp_editor($content, $content_id, $args);
+    }
+
+    private $_nonce = 'wems_admin_nonce';
+
+    public function wemsAddScripts()
+    {
+        wp_enqueue_script('wems-admin', WEMS_URL . 'assets/js/admin.js', array(), 1.0);
+
+        $admin_options = array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            '_nonce'   => wp_create_nonce($this->_nonce)
+        );
+
+        wp_localize_script('wems-admin', 'wems_ex', $admin_options);
+
+    }
+
+    public function buscaClientes()
+    {
+        $objdata = new WEMSData();
+        return $objdata->getEmailsClientes();
+    }
 
 }
 
