@@ -111,8 +111,16 @@ class woocomerce_email_marketing_simples
      {
         ?>
             <h2>Enviar emails</h2>
-            <h4>Primeiro Passo Clique no botão abaixo para verificar a quantidade de e-mails<h4/>
-            <button id="buscarEmails" class="button button-primary">Buscar e-mails</button>
+            <h4>Primeiro Passo Clique no botão abaixo para verificar a quantidade de e-mails</h4>
+            <table>
+                <tbody>
+                    <tr scope="row">
+                        <td>  <button id="buscarEmails" class="button button-primary">Buscar e-mails</button></td>
+                        <td><p class="strong" id="quantidade_emails"></p></td>
+                    </tr>
+                </tbody>
+            </table>
+          
 
          <?php
      }

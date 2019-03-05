@@ -18,9 +18,16 @@ class WEMSData
 
     public function getEmailsClientes()
     {
-        $sql = "SELECT DISTINCT * FROM {$this->db->prefix}users";
-        $clientes = $this->db->get_results($sql);
-        wp_die(print_r($clientes, true));
+        $sql = "SELECT DISTINCT user_email FROM {$this->db->prefix}users";
+        $email = $this->db->get_results($sql);
+
+        
+        $result = new  WEMSobjJSON();
+        $result->success = true;
+        $result->count = count($email);
+    
+
+        $this->retornoJSON($result);
     }
 
 
