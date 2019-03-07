@@ -1,7 +1,7 @@
 <?php
 require($_SERVER['DOCUMENT_ROOT'].'/wp-load.php');
-require(ABSPATH . 'wp-includes/class-phpmailer.php');
-require(ABSPATH . 'wp-includes/class-smtp.php');
+require_once(ABSPATH . 'wp-includes/class-phpmailer.php');
+require_once(ABSPATH . 'wp-includes/class-smtp.php');
 require_once('woocommerce-email-marketing-simples-data.php');
 
 class WEMSEmailSender extends PHPMailer
