@@ -1,4 +1,5 @@
 <?php
+require_once('woocommerce-email-marketing-simples-sender.php');
 class WEMSData
 {
     private $db;
@@ -25,11 +26,52 @@ class WEMSData
         $result = new  WEMSobjJSON();
         $result->success = true;
         $result->count = count($email);
+        $result->insert_id = $this->setDataonTable($email);
+    
+
+        $this->retornoJSON($result);
+    }
+    
+    public function getEmailToSend()
+    {
+        $sql = "SELECT DISTINCT email FROM {$this->db->prefix}wems_emails WHERE status = 'N'";
+        $email = $this->db->get_results($sql);
+
+        
+        $result = new  WEMSobjJSON();
+        $result->success = true;
+        $result->count = count($email);
+        $result->content = $email;
     
 
         $this->retornoJSON($result);
     }
 
+    private function setDataonTable($data)
+    {
+        $table = $this->db->prefix . 'wems_emails';
+
+        foreach($data as $item) {
+            
+            $dados = array('email' => $item->user_email, 'status' => 'N');
+            $this->db->insert($table, $dados);
+            $aIDS[] =  $this->db->insert_id;
+        
+        }
+        return $aIDS;
+    }
+    
+    public function wemsSendEmails()
+    {   
+      $table   = $this->db->prefix . 'wems_emails';
+      $sql     = "SELECT DISTINCT email FROM {$table} WHERE status='N' LIMIT 1";
+      $email   = $this->db->get_results($sql);
+      
+      $opcoes  = get_option('wems_data');
+        
+      $objSender = new WEMSEmailSender($email[0]->email,$opcoes['wems_assunto'],$opcoes['wems_corpo']); 
+        
+    }
 
 }
 
@@ -42,7 +84,6 @@ class WEMSobjJSON extends \stdClass
         $this->content = "";
         $this->error   = "";
     }
-   
 
 }
 

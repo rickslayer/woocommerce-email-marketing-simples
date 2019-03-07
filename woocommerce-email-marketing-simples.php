@@ -5,7 +5,7 @@
  * Description: Envie e-mail marketing de forma simples
  * Version:  1.10
  * Author: @rickslayer
- * Author URI: http://www.actio.net.br
+ * Author URI:https://www.github.com/rickslayer
  * Developer: Paulo Ricardo Almeida
  * Developer URI: https://www.github.com/rickslayer
  * Text Domain: rickslayer
@@ -43,23 +43,31 @@ if(!defined('WEMS_PATH')) {
 
 require_once('woocommerce-email-marketing-simples-data.php');
 
+
 class woocomerce_email_marketing_simples
 {
+    private $table_success;
     public function __construct()
     {
         $this->wems_checkWoocommerceActive();
 
+        register_activation_hook(__FILE__,array( $this, 'criandoTabelas'));
+      
         add_action( 'admin_menu', array( $this, 'wems_resgister_submenu_page' ) );
         add_action( 'admin_menu', array( $this, 'wems_register_submenu_page_enviar'));
         add_action('admin_init', array($this, 'wems_settings_fields'));
         add_action('admin_enqueue_scripts', array($this, 'wemsAddScripts'));
         add_action( 'wp_ajax_buscaClientes', array( $this, 'buscaClientes' ) );
         add_action( 'wp_ajax_admin_buscaClientes', array( $this, 'buscaClientes' ) );
-      
-        
-        
+        add_action( 'wp_ajax_enviaEmails', array( $this, 'enviaEmails' ) );
+        add_action( 'wp_ajax_admin_enviaEmails', array( $this, 'enviaEmails' ) ); 
+        add_action( 'wp_ajax_getEmailData', array( $this, 'getEmailData' ) );
+        add_action( 'wp_ajax_admin_getEmailData', array( $this, 'getEmailData' ) );    
+               
     }
-
+    /**
+     * Função responsável por verificar se o Woocommerce está ativo
+     */
     private function wems_checkWoocommerceActive()
     {
         if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {    
@@ -76,7 +84,7 @@ class woocomerce_email_marketing_simples
     }
 
     public function wems_resgister_submenu_page() {
-        add_menu_page("Email Marketing Simples", "WC Email Marketing Simples","manage_options","woocommerce-email-marketing-simples",array($this, "wems_register_submenu_page_callback"));
+        add_menu_page("Email Marketing Simples", "WC Email Marketing Simples","manage_options","woocommerce-email-marketing-simples",array($this, "wems_register_submenu_page_callback"), 'dashicons-email-alt');
         
     }
 
@@ -104,7 +112,6 @@ class woocomerce_email_marketing_simples
 
         </form>
         <?php
-
      }
 
      public function wems_register_submenu_page_callback_enviar()
@@ -120,8 +127,18 @@ class woocomerce_email_marketing_simples
                     </tr>
                 </tbody>
             </table>
-          
-
+            <div id="segundopasso">
+                <h4>Agora é só clicar em enviar e esperar a mensagem de finalização!</h4>
+                <table>
+                    <tbody>
+                        <tr scope="row">
+                        <td>  <button id="EnviarEmails" class="button button-primary">Enviar Emails</button></td>
+                        <td><p class="strong" id="quantidade_enviada"></p></td>
+                        <td><div class="update-nag notice" id="div_contador"><p id="contador"></p></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
          <?php
      }
 
@@ -190,6 +207,40 @@ class woocomerce_email_marketing_simples
         return $objdata->getEmailsClientes();
     }
 
+    public function enviaEmails()
+    {
+        $objdata = new WEMSData();
+        return $objdata->wemsSendEmails();
+    }
+
+    public function getEmailData()
+    {
+        $objdata = new WEMSData();
+        return $objdata->getEmailToSend();
+        
+    }
+
+    public function criandoTabelas()
+    {
+        global $wpdb;
+
+        $table_name = $wpdb->prefix . "wems_emails";
+        $charset_collate = $wpdb->get_charset_collate();
+        $db_version = '1.0.0';
+
+        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+            id INT NOT NULL AUTO_INCREMENT,
+            email VARCHAR(150) NULL,
+            status VARCHAR(1) NULL,
+            PRIMARY KEY (id)
+            )$charset_collate;";
+
+           require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+          
+           $this->table_success = dbDelta($sql); 
+           add_option('my_db_version', $db_version);
+    }
+   
 }
 
 new woocomerce_email_marketing_simples();
