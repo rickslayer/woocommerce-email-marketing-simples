@@ -9,7 +9,7 @@ class WEMSEmailSender extends PHPMailer
     
     private $result;
 
-    public function __construct($to, $assunto, $corpo, $usuario_email, $senha, $host, $nome)
+    public function __construct($to, $assunto, $corpo, $usuario_email, $senha, $host, $nome, $porta)
     {
         date_default_timezone_set('America/Sao Paulo');
         $this->result = new WEMSobjJSON();
@@ -20,10 +20,13 @@ class WEMSEmailSender extends PHPMailer
         $this->Subject = $assunto;
         //$this->AddBCC('webmaster@bemybag.com.br', 'Administrador');
         $this->SMTPAuth = true;  
+        if($host == 'smtp.gmail.com') {
+            $this->SMTPSecure = 'tls';
+        }
         //$mail->SMTPSecure = 'ssl'; 
         $this->SMTPAutoTLS = false;
         $this->Host = $host;
-        $this->Port = 587;
+        $this->Port = $porta;
         $this->Username = $usuario_email;
         $this->Password = $senha;        
         $this->SMTPDebug  = 0;

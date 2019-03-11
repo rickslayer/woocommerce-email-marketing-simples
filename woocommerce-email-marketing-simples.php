@@ -59,14 +59,19 @@ class woocomerce_email_marketing_simples
         
         new WEMSConfig();
 
-        add_action('admin_init', array($this, 'wems_settings_fields'));
-        add_action('admin_enqueue_scripts', array($this, 'wemsAddScripts'));
+        add_action( 'admin_init', array($this, 'wems_settings_fields'));
+        add_action( 'admin_enqueue_scripts', array($this, 'wemsAddScripts'));
         add_action( 'wp_ajax_buscaClientes', array( $this, 'buscaClientes' ) );
         add_action( 'wp_ajax_admin_buscaClientes', array( $this, 'buscaClientes' ) );
         add_action( 'wp_ajax_enviaEmails', array( $this, 'enviaEmails' ) );
         add_action( 'wp_ajax_admin_enviaEmails', array( $this, 'enviaEmails' ) ); 
         add_action( 'wp_ajax_getEmailData', array( $this, 'getEmailData' ) );
-        add_action( 'wp_ajax_admin_getEmailData', array( $this, 'getEmailData' ) );  
+        add_action( 'wp_ajax_admin_getEmailData', array( $this, 'getEmailData' ) ); 
+        add_action( 'wp_ajax_enviaEmailsTeste', array( $this, 'enviaEmailsTeste' ) );
+        add_action( 'wp_ajax_admin_enviaEmailsTeste', array( $this, 'enviaEmailsTeste' ) ); 
+        add_action( 'wp_ajax_check_smtp_config', array( $this, 'check_smtp_config' ) );
+        add_action( 'wp_ajax_admin_check_smtp_config', array( $this, 'check_smtp_config' ) ); 
+        
         
         $this->wems_data = new WEMSData();
                
@@ -188,11 +193,23 @@ class woocomerce_email_marketing_simples
         return $objdata->wemsSendEmails();
     }
 
+    public function enviaEmailsTeste()
+    {
+        $post = $_POST;
+        $objdata = new WEMSData();
+        return $objdata->wemsSentTest($post['email']);
+    }
+
     public function getEmailData()
     {
         $objdata = new WEMSData();
         return $objdata->getEmailToSend();
-        
+    }
+
+    public function check_smtp_config()
+    {
+        $objConfig = new WEMSConfig();
+        return $objConfig->wems_check_smtp_config();
     }
 
     public function criandoTabelas()

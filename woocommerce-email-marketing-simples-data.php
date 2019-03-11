@@ -70,8 +70,16 @@ class WEMSData
       $opcoes  = get_option('wems_data');
       $opcoes_smtp = get_option('wems_data_smtp');
         
-      $objSender = new WEMSEmailSender($email[0]->email,$opcoes['wems_assunto'],$opcoes['wems_corpo'],$opcoes_smtp['wems_smtp_email'],$opcoes_smtp['wems_smtp_pass'],$opcoes_smtp['wems_smtp_host'],$opcoes_smtp['wems_smtp_nome']); 
+      $objSender = new WEMSEmailSender($email[0]->email,$opcoes['wems_assunto'],$opcoes['wems_corpo'],$opcoes_smtp['wems_smtp_email'],$opcoes_smtp['wems_smtp_pass'],$opcoes_smtp['wems_smtp_host'],$opcoes_smtp['wems_smtp_nome'],$opcoes_smtp['wems_smtp_porta']); 
      
+    }
+
+    public function wemsSentTest($to)
+    {
+        $opcoes  = get_option('wems_data');
+        $opcoes_smtp = get_option('wems_data_smtp');
+        
+        $objSender = new WEMSEmailSender($to,$opcoes['wems_assunto'],$opcoes['wems_corpo'],$opcoes_smtp['wems_smtp_email'],$opcoes_smtp['wems_smtp_pass'],$opcoes_smtp['wems_smtp_host'],$opcoes_smtp['wems_smtp_nome'],$opcoes_smtp['wems_smtp_porta']); 
     }
     
     private $option_name;

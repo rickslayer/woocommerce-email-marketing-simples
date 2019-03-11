@@ -11,6 +11,8 @@ class WEMSConfig
         add_action('sd_settings_tab', array($this, 'wems_config_tab'));
         add_action( 'sd_settings_content', array($this, 'wems_config_content' ));
         add_action('admin_init', array($this, 'wems_settings_fields_smtp_config'));
+        add_filter( 'plugin_row_meta', array($this, 'wems_custom_plugin_row_meta'), 10, 2 );
+        add_filter('plugin_action_links', array($this, 'wems_plugin_action_links'), 10, 2);
 
         $this->wems_data = new WEMSData();
         $this->wems_data->wemsSetOptionsPlugin('wems_data_smtp');
@@ -67,6 +69,16 @@ class WEMSConfig
             ?>
 
         </form>
+        <table class="form-table">
+            <tbody>
+                <h3>Teste se as configurações estão corretas:</h3>
+                <tr><th scope="row"><input type="email" style="width: 400px;" id="emailTeste" placeholder="digite um e-mail para testar o envio"></th><td> 
+                <tr>
+                    <td><button class="button button-primary" id="btnEnviaTeste">Testar Envio</button></td>
+                    <td><div class="update-nag notice" id="msg_sucesso_teste"></div></td>
+                </tr>
+            </tbody>
+        </table>
         <?php    
     }
 
@@ -83,6 +95,9 @@ class WEMSConfig
         add_settings_field('wems_smtp_pass', __('Senha','woocommerce_email_marketing_simples'), array($this,'wems_field_render_smtp_pass'),'wemsSMTPage', 'wems_settings_section_smtp');
 
         add_settings_field('wems_smtp_host', __('Host','woocommerce_email_marketing_simples'), array($this,'wems_field_render_smtp_host'),'wemsSMTPage', 'wems_settings_section_smtp');
+       
+        add_settings_field('wems_smtp_porta', __('Porta','woocommerce_email_marketing_simples'), array($this,'wems_field_render_smtp_porta'),'wemsSMTPage', 'wems_settings_section_smtp');
+        
 
     }
 
@@ -118,13 +133,21 @@ class WEMSConfig
         <?php
     }
 
+    public function wems_field_render_smtp_porta()
+    {
+        $options = $this->wems_data->wemsGetOptionsPlugin();
+        ?>
+        <input type='text' required name=wems_data_smtp[wems_smtp_porta]' maxlength="3" value='<?php echo (isset($options['wems_smtp_porta']) ? $options['wems_smtp_porta'] : ''); ?>' style="width: 100px;">
+        <?php
+    }
+
     public function wems_enviar_email_content()
     {
         global $sd_active_tab;
         if ( '' || 'enviar-emails' != $sd_active_tab )
             return;
         ?>
-      
+        <div class="error notice" id="msg_erro_smtp"></div>
          <h2>Primeiro Passo Clique no botão abaixo para verificar a quantidade de e-mails</h2>
         <table>
             <tbody>
@@ -147,6 +170,54 @@ class WEMSConfig
             </table>
         </div>
         <?php
+    }
+
+    public function wems_custom_plugin_row_meta( $links, $file ) 
+    {
+
+        if ( strpos( $file, 'woocommerce-email-marketing-simples.php' ) !== false ) {
+            $new_links = array(
+                    'config-smtp'  => '<a href="/wp-admin/admin.php?page=wems-enviar-email&tab=config-smtp">Configurar SMTP</a>',
+                    
+                    'configuracao' => '<a href="/wp-admin/admin.php?page=wems-enviar-email">Enviar E-mail</a>',
+                    
+            );
+            
+            $links = array_merge( $links, $new_links );
+        }
+	
+    	return $links;
+    }
+
+    public function wems_plugin_action_links($links, $file) 
+    {
+        if ( strpos( $file, 'woocommerce-email-marketing-simples.php' ) !== false ) {
+        
+            $new_links = array(
+                'config-email'  => '<a href="/wp-admin/admin.php?page=woocommerce-email-marketing-simples">Montar Email</a>',
+            );
+
+            $links = array_merge($links, $new_links);
+        }
+
+        return $links;
+    }
+
+    public function wems_check_smtp_config()
+    {
+        $options = $this->wems_data->wemsGetOptionsPlugin();
+       
+        $result  = new WEMSobjJSON();        
+        if($options['wems_smtp_email'] != '' && $options['wems_smtp_nome'] != '' && $options['wems_smtp_pass'] != ''  && $options['wems_smtp_porta'] != '') {
+            $result->message = 'Configuração SMTP Ok';
+            $result->success = true;
+        } else {
+            $result->message = 'Reveja as configurações SMTP';
+            $result->success = false;
+        }
+        
+        $this->wems_data->retornoJSON($result);
+        
     }
 
 }
