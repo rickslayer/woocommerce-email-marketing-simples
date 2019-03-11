@@ -14,6 +14,8 @@ global $wpdb, $wp_version;
 //delete options
 $wpdb->query("DELETE FROM $wpdb->options WHERE option_name = 'wems_data';");
 
+$wpdb->query("DELETE FROM $wpdb->options WHERE option_name = 'wems_data_smtp';");
+
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wems_emails" );
 
 wp_cache_flush();

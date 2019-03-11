@@ -9,23 +9,23 @@ class WEMSEmailSender extends PHPMailer
     
     private $result;
 
-    public function __construct($to, $assunto, $corpo)
+    public function __construct($to, $assunto, $corpo, $usuario_email, $senha, $host, $nome)
     {
         date_default_timezone_set('America/Sao Paulo');
         $this->result = new WEMSobjJSON();
         $this->isSMTP();
         $this->CharSet='UTF-8';
-        $this->setFrom('atendimento@bemybag.com.br', 'Atendimento Be My Bag');
-        $this->addReplyTo('atendimento@bemybag.com.br', 'Atendimento Be My Bag');
+        $this->setFrom($usuario_email, $nome);
+        $this->addReplyTo($usuario_email, $nome);
         $this->Subject = $assunto;
-        $this->AddBCC('webmaster@bemybag.com.br', 'Administrador');
+        //$this->AddBCC('webmaster@bemybag.com.br', 'Administrador');
         $this->SMTPAuth = true;  
         //$mail->SMTPSecure = 'ssl'; 
         $this->SMTPAutoTLS = false;
-        $this->Host = 'mail.bemybag.com.br';
+        $this->Host = $host;
         $this->Port = 587;
-        $this->Username = 'webmaster@bemybag.com.br';
-        $this->Password = '91037766!@#';        
+        $this->Username = $usuario_email;
+        $this->Password = $senha;        
         $this->SMTPDebug  = 0;
         $this->addAddress( $to );
         $this->IsHTML(true);

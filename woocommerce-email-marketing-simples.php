@@ -42,11 +42,13 @@ if(!defined('WEMS_PATH')) {
 }
 
 require_once('woocommerce-email-marketing-simples-data.php');
-
+require_once('wems-config.php');
 
 class woocomerce_email_marketing_simples
 {
     private $table_success;
+    private $wems_data;
+
     public function __construct()
     {
         $this->wems_checkWoocommerceActive();
@@ -54,7 +56,9 @@ class woocomerce_email_marketing_simples
         register_activation_hook(__FILE__,array( $this, 'criandoTabelas'));
       
         add_action( 'admin_menu', array( $this, 'wems_resgister_submenu_page' ) );
-        add_action( 'admin_menu', array( $this, 'wems_register_submenu_page_enviar'));
+        
+        new WEMSConfig();
+
         add_action('admin_init', array($this, 'wems_settings_fields'));
         add_action('admin_enqueue_scripts', array($this, 'wemsAddScripts'));
         add_action( 'wp_ajax_buscaClientes', array( $this, 'buscaClientes' ) );
@@ -62,7 +66,9 @@ class woocomerce_email_marketing_simples
         add_action( 'wp_ajax_enviaEmails', array( $this, 'enviaEmails' ) );
         add_action( 'wp_ajax_admin_enviaEmails', array( $this, 'enviaEmails' ) ); 
         add_action( 'wp_ajax_getEmailData', array( $this, 'getEmailData' ) );
-        add_action( 'wp_ajax_admin_getEmailData', array( $this, 'getEmailData' ) );    
+        add_action( 'wp_ajax_admin_getEmailData', array( $this, 'getEmailData' ) );  
+        
+        $this->wems_data = new WEMSData();
                
     }
     /**
@@ -84,19 +90,15 @@ class woocomerce_email_marketing_simples
     }
 
     public function wems_resgister_submenu_page() {
-        add_menu_page("Email Marketing Simples", "WC Email Marketing Simples","manage_options","woocommerce-email-marketing-simples",array($this, "wems_register_submenu_page_callback"), 'dashicons-email-alt');
+        add_menu_page("Email Marketing Simples", "Email Marketing Simples","manage_options","woocommerce-email-marketing-simples",array($this, "wems_register_submenu_page_callback"), 'dashicons-email-alt');
         
     }
-
-    public function wems_register_submenu_page_enviar(){
-        add_submenu_page('woocommerce-email-marketing-simples', 'Enviar e-mails', 'Enviar e-mails', 'manage_options','wems-enviar-email', array($this, 'wems_register_submenu_page_callback_enviar'));
-    }
-
-    private $option_name = 'wems_data';
+  
 
     private function wems_getData()
     {
-        return get_option($this->option_name, array());
+        $this->wems_data->wemsSetOptionsPlugin('wems_data');
+        return $this->wems_data->wemsGetOptionsPlugin();
     }
 
     public function wems_register_submenu_page_callback() 
@@ -113,34 +115,7 @@ class woocomerce_email_marketing_simples
         </form>
         <?php
      }
-
-     public function wems_register_submenu_page_callback_enviar()
-     {
-        ?>
-            <h2>Enviar emails</h2>
-            <h4>Primeiro Passo Clique no botão abaixo para verificar a quantidade de e-mails</h4>
-            <table>
-                <tbody>
-                    <tr scope="row">
-                        <td>  <button id="buscarEmails" class="button button-primary">Buscar e-mails</button></td>
-                        <td><p class="strong" id="quantidade_emails"></p></td>
-                    </tr>
-                </tbody>
-            </table>
-            <div id="segundopasso">
-                <h4>Agora é só clicar em enviar e esperar a mensagem de finalização!</h4>
-                <table>
-                    <tbody>
-                        <tr scope="row">
-                        <td>  <button id="EnviarEmails" class="button button-primary">Enviar Emails</button></td>
-                        <td><p class="strong" id="quantidade_enviada"></p></td>
-                        <td><div class="update-nag notice" id="div_contador"><p id="contador"></p></div></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-         <?php
-     }
+   
 
     public function wems_settings_fields()
     {

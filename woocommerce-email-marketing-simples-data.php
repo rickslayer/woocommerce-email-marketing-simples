@@ -68,9 +68,22 @@ class WEMSData
       $email   = $this->db->get_results($sql);
       
       $opcoes  = get_option('wems_data');
+      $opcoes_smtp = get_option('wems_data_smtp');
         
-      $objSender = new WEMSEmailSender($email[0]->email,$opcoes['wems_assunto'],$opcoes['wems_corpo']); 
-        
+      $objSender = new WEMSEmailSender($email[0]->email,$opcoes['wems_assunto'],$opcoes['wems_corpo'],$opcoes_smtp['wems_smtp_email'],$opcoes_smtp['wems_smtp_pass'],$opcoes_smtp['wems_smtp_host'],$opcoes_smtp['wems_smtp_nome']); 
+     
+    }
+    
+    private $option_name;
+
+    public function wemsGetOptionsPlugin()
+    {
+        return get_option($this->option_name, array());
+    }
+
+    public function wemsSetOptionsPlugin($option_name)
+    {
+        $this->option_name = $option_name;
     }
 
 }
