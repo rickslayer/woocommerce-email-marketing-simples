@@ -88,6 +88,8 @@ class WEMSConfig
 
         add_settings_section('wems_settings_section_smtp',__('Configurar o Enviador de e-mail','woocomerce_email_marketing_simples'), '','wemsSMTPage');
 
+        add_settings_field('wems_smtp_token', __('Token','woocommerce_email_marketing_simples'), array($this,'wems_field_render_smtp_token'),'wemsSMTPage', 'wems_settings_section_smtp');
+
         add_settings_field('wems_smtp_nome', __('Nome','woocommerce_email_marketing_simples'), array($this,'wems_field_render_smtp_nome'),'wemsSMTPage', 'wems_settings_section_smtp');
 
         add_settings_field('wems_smtp_email', __('E-mail','woocommerce_email_marketing_simples'), array($this,'wems_field_render_smtp_email'),'wemsSMTPage', 'wems_settings_section_smtp');
@@ -100,6 +102,14 @@ class WEMSConfig
         
 
     }
+    public function wems_field_render_smtp_token()
+    {
+        $options = $this->wems_data->wemsGetOptionsPlugin();
+        ?>
+        <input type='text' required name=wems_data_smtp[wems_smtp_token]' maxlength="40" placeholder="token necessário para funcionar" value='<?php echo (isset($options['wems_smtp_token']) ? $options['wems_smtp_token'] : ''); ?>' style="width: 400px;">
+        <?php
+    }
+    
 
     public function wems_field_render_smtp_nome()
     {
@@ -220,4 +230,25 @@ class WEMSConfig
         
     }
 
+}
+
+class validateToken
+{
+    public static function check($token)
+    {
+        ob_start();
+        $service_url = 'http://api.actiocomunicacao.com.br/api/token';
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL , $service_url);
+        curl_setopt($curl, CURLOPT_HEADER , 0);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array("token:{$token}",'Content-Type: application/json;charset=utf8'));
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS,"token=''");
+        curl_exec($curl);
+        $resposta = ob_get_contents();
+        ob_end_clean();
+        $httpCode = curl_getinfo( $curl, CURLINFO_HTTP_CODE );
+        curl_close($curl);
+        die(print_r($resposta, true))   ;
+    }
 }

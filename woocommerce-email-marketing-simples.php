@@ -51,6 +51,9 @@ class woocomerce_email_marketing_simples
 
     public function __construct()
     {
+       
+
+
         $this->wems_checkWoocommerceActive();
 
         register_activation_hook(__FILE__,array( $this, 'criandoTabelas'));
