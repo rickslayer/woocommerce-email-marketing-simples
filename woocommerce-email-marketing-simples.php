@@ -51,8 +51,11 @@ class woocomerce_email_marketing_simples
 
     public function __construct()
     {
-       
-
+        $this->wems_data = new WEMSData();
+    
+        $token= $this->wems_getData()['wems_token'];
+        
+        validateToken::check($token);
 
         $this->wems_checkWoocommerceActive();
 
@@ -75,9 +78,6 @@ class woocomerce_email_marketing_simples
         add_action( 'wp_ajax_check_smtp_config', array( $this, 'check_smtp_config' ) );
         add_action( 'wp_ajax_admin_check_smtp_config', array( $this, 'check_smtp_config' ) ); 
         
-        
-        $this->wems_data = new WEMSData();
-               
     }
     /**
      * Função responsável por verificar se o Woocommerce está ativo
@@ -130,6 +130,8 @@ class woocomerce_email_marketing_simples
         register_setting('wemsPagina', 'wems_data');
 
         add_settings_section('wems_settings_section',__('WooCommerce Email Marketing Simples','woocomerce_email_marketing_simples'), '','wemsPagina');
+        
+        add_settings_field('wems_token', __('Token','woocommerce_email_marketing_simples'), array($this,'wems_field_render_token'),'wemsPagina', 'wems_settings_section');
 
         add_settings_field('wems_ativar', __('Ativar Email Marketing','woocommerce_email_marketing_simples'), array($this,'wems_field_render_ativar'),'wemsPagina', 'wems_settings_section');
 
@@ -137,6 +139,14 @@ class woocomerce_email_marketing_simples
 
         add_settings_field('wems_corpo', __('Corpo do e-mail', 'woocommerce_email_marketing_simples'), array($this, 'wems_field_render_corpo'), 'wemsPagina', 'wems_settings_section');
         
+    }
+    
+    public function wems_field_render_token()
+    {
+        $options = $this->wems_getData();
+        ?>
+        <input type='text' name=wems_data[wems_token]' value='<?php echo (isset($options['wems_token']) ? $options['wems_token'] : ''); ?>' style="width: 400px;" maxlength="40">
+        <?php
     }
  
 
